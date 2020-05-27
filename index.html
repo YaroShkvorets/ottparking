@@ -8,9 +8,7 @@ Parks<!DOCTYPE html>
     <script  data-cfasync="false" src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
     <link href='https://api.tiles.mapbox.com/mapbox-gl-js/v0.50.0/mapbox-gl.css' rel='stylesheet' />
     <link href='https://www.mapbox.com/base/latest/base.css' rel='stylesheet' />
-    <script src='https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v2.2.0/mapbox-gl-geocoder.min.js'></script>
-    <link rel='stylesheet' href='https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v2.2.0/mapbox-gl-geocoder.css' type='text/css' />
-
+    
     <style>
         body { margin:0; padding:0; }
         #app { position:absolute; top:0; right:0; bottom:0; left:0; }
@@ -91,14 +89,7 @@ var map = new mapboxgl.Map({
 map.addControl(new mapboxgl.ScaleControl(), 'bottom-left');
 map.addControl(new mapboxgl.NavigationControl(),'bottom-left');
 map.addControl(new mapboxgl.AttributionControl({compact: true }), 'bottom-right');
-const geocoder = new MapboxGeocoder({
-        accessToken: mapboxgl.accessToken,
-        bbox: [-76.385193,44.963826,-75.011902,45.614998],
-        zoom: 13,
-        limit: 10
-    })
 
-map.addControl(geocoder, 'bottom-right')
 
 var layerList = document.getElementById('menu');
 var inputs = layerList.getElementsByTagName('input');
