@@ -1,0 +1,310 @@
+Parks<!DOCTYPE html>
+<html>
+<head>
+    <meta charset='utf-8' />
+    <title>Ottawa Greenspace</title>
+    <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
+    <script src='https://api.tiles.mapbox.com/mapbox-gl-js/v0.50.0/mapbox-gl.js'></script>
+    <script  data-cfasync="false" src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+    <link href='https://api.tiles.mapbox.com/mapbox-gl-js/v0.50.0/mapbox-gl.css' rel='stylesheet' />
+    <link href='https://www.mapbox.com/base/latest/base.css' rel='stylesheet' />
+    <script src='https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v2.2.0/mapbox-gl-geocoder.min.js'></script>
+    <link rel='stylesheet' href='https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v2.2.0/mapbox-gl-geocoder.css' type='text/css' />
+
+    <style>
+        body { margin:0; padding:0; }
+        #app { position:absolute; top:0; right:0; bottom:0; left:0; }
+        #map { position:absolute; top:0; bottom:0; width:100%; }
+        .enlarge-onhover {
+             width: 160px;
+             height: 100px;
+             transition-duration: 0.5s; /* delays for 1 second */
+             -webkit-transition-duration: 0.5s; /* for Safari & Chrome */
+        }
+        .enlarge-onhover:hover {
+             width: 640px;
+             height: 400px;
+        }
+        #menu {
+           position: absolute;
+           background: #fff;
+           padding: 10px;
+           font-family: 'Open Sans', sans-serif;
+        }
+    </style>
+</head>
+<body>
+<div id='app' class='col12 contain clip'>
+<div id='map'></div>
+<div class="loading" title="loading..." id="loader"></div>
+<div id='menu'>
+  <input id='dark' type='radio' name='rtoggle' value='dark' checked='checked'>
+  <label for='dark'>dark</label>
+  <input id='light' type='radio' name='rtoggle' value='light'>
+  <label for='light'>light</label>
+  <input id='bright' type='radio' name='rtoggle' value='bright'>
+  <label for='bright'>bright</label>
+  <input id='satellite' type='radio' name='rtoggle' value='satellite'>
+  <label for='satellite'>satellite</label>
+</div>
+
+<div class='col4 pad1 scroll-styled pin-topright '>
+<div id='legendbtn' class='fill-darken2 pad1 icon book button hidden fr' onclick="$('#legendbtn').toggle();$('#legend').toggle()"></div>
+    <div id='legend' class='fill-darken1 round'>
+        <div id='closebtn' class='fill-darken2 pad1 icon close button fr' onclick="$('#legendbtn').toggle();$('#legend').toggle()"></div>
+        <div class='clearfix'></div>
+        <div class='pad1'>
+            <h3 class='dark'>Parks & Parking Lots</h3><br>
+            <form>
+            <fieldset class='checkbox-pill clearfix '>
+                <input type='checkbox' id='osm-parks' checked='checked'>
+                <label for='osm-parks' id='osm-parks-label' class='button icon check quiet col12' style="text-align:left;">Parks</label>
+                <input type='checkbox' id='osm-parkings' checked='checked'>
+                <label for='osm-parkings' id='osm-parkings-label' class='button icon check quiet col12' style="text-align:left;">Parking Lots</label>
+            </fieldset>
+            </form>
+            
+            <div class='clearfix'></div>
+        </div>
+    </div>
+</div>
+
+<script>
+var Layers = [
+    {id:"osm-parks", name:'Parks', color:'#58ff42', opacity:0.5, outline:'#58ff42', tileset:'mapbox://bikeottawa.d6lkrloq', layer:'greenspace-8of6r3'},
+    {id:"osm-parkings", name:'Parking', color:'#f25022', opacity:0.5, outline:'#f25022', tileset:'mapbox://bikeottawa.dod2u88f', layer:'ottawa-parking-duzxet'}
+    ];
+
+
+mapboxgl.accessToken = 'pk.eyJ1IjoiYmlrZW90dGF3YSIsImEiOiJjamdqaWxrN3gwZXQ4MnFxbjAwZXRpbG8zIn0.XhAdk2ASwdipubccCWTfoQ';
+var map = new mapboxgl.Map({
+  container: 'map',
+  style: 'mapbox://styles/mapbox/dark-v9',
+  center: [-75.697927,45.417431],
+  zoom: 13,
+  minZoom: 10,
+  maxZoom: 20,
+  maxBounds: [[-76.385193,44.963826],[-75.011902,45.614998]],
+  attributionControl: false
+});
+
+map.addControl(new mapboxgl.ScaleControl(), 'bottom-left');
+map.addControl(new mapboxgl.NavigationControl(),'bottom-left');
+map.addControl(new mapboxgl.AttributionControl({compact: true }), 'bottom-right');
+const geocoder = new MapboxGeocoder({
+        accessToken: mapboxgl.accessToken,
+        bbox: [-76.385193,44.963826,-75.011902,45.614998],
+        zoom: 13,
+        limit: 10
+    })
+
+map.addControl(geocoder, 'bottom-right')
+
+var layerList = document.getElementById('menu');
+var inputs = layerList.getElementsByTagName('input');
+
+function switchLayer(layer) {
+    var layerId = layer.target.id;
+    map.setStyle('mapbox://styles/mapbox/' + layerId + '-v9');
+}
+
+for (var i = 0; i < inputs.length; i++) {
+    inputs[i].onclick = switchLayer;
+}
+
+function init() {
+
+  Layers.forEach(function (layer, i) {
+    map.addLayer({
+      "id": layer.id,
+      "type": "fill",
+      "source": {
+          type: 'vector',
+          url: layer.tileset,
+      },
+      "source-layer": layer.layer,
+      "paint": {
+          "fill-color": layer.color,
+          "fill-outline-color": layer.outline,
+          "fill-opacity": layer.opacity
+      }
+    });
+    document.getElementById(layer.id+'-label').innerHTML = '<span style="display: inline-block;width:50px; height:8px;background-color: '+layer.color+'"></span>&nbsp;'+layer.name;
+
+  });
+
+  map.addSource('highlight', { type: 'geojson' , data: null});
+  map.addLayer({
+     "id": "highlight",
+     "type": "fill",
+     "source": 'highlight',
+     "paint": {
+         "fill-color": "#f98ee0",
+         "fill-opacity": 0.5
+     }
+ });
+
+ map.addSource('boundaries', {
+        type: 'geojson',
+        data: 'ottawa-boundaries.json'
+      });
+
+      map.addLayer({
+        'id': 'boundaries',
+        'type': 'line',
+        'source': 'boundaries',
+        "layout": {
+          "line-join": "round",
+          "line-cap": "round"
+        },
+        "paint": {
+            "line-color": "#bbb",
+            "line-width": 4,
+            "line-blur":2
+        }
+      });
+
+}
+
+function toggleLayer (checkbox) {
+    map.setLayoutProperty(checkbox.currentTarget.id, 'visibility', checkbox.currentTarget.checked?'visible':'none');
+  }
+  
+document.getElementById('osm-parks').onclick = toggleLayer
+document.getElementById('osm-parkings').onclick = toggleLayer
+
+
+map.on('style.load', function () {
+
+    init()
+
+});
+/*
+map.on('click', function(e) {
+
+    var features = map.queryRenderedFeatures(e.point, {
+                layers: Layers.map(l=>l.id)
+            });
+    if (!features.length)
+    {
+        displayFeedbackPopup(e.lngLat);
+        window.history.replaceState(null, null, window.location.pathname+'?&lat='+e.lngLat.lat+'&lng='+e.lngLat.lng);
+        return;
+    }
+    var feature = features[0];
+    displayFeatureInfo(feature, e.lngLat);
+    window.history.replaceState(null, null, window.location.pathname+'?&lat='+e.lngLat.lat+'&lng='+e.lngLat.lng+'&id='+feature.properties.id);
+      //TODO: highlight using filters
+    map.getSource('highlight').setData(feature);
+
+});*/
+
+
+map.on('load', function(e) {
+/*
+  map.on('mousemove', function(e) {
+      var features = map.queryRenderedFeatures(e.point, {
+                  layers: Layers.map(l=>l.id)
+              });
+      map.getCanvas().style.cursor = (features.length) ? 'pointer' : '';
+  });
+*/
+  document.getElementById("loader").style.visibility = "hidden";
+  //url = new URLSearchParams(window.location.href)
+  url = (function(a) {    //workaround for edge that doesn't support URLSearchParams
+      if (a == "") return {};
+      var b = {};
+      for (var i = 0; i < a.length; ++i)
+      {
+          var p=a[i].split('=', 2);
+          if (p.length == 1)
+              b[p[0]] = "";
+          else
+              b[p[0]] = decodeURIComponent(p[1].replace(/\+/g, " "));
+      }
+      return b;
+  })(window.location.search.substr(1).split('&'));
+  const lat = url['lat']
+  const lng = url['lng']
+  if(lat && lng){
+    map.flyTo({center: [lng, lat]})
+    map.once('moveend', function(){
+        map.fire("click", {point : map.project([lng, lat]), lngLat: {lng:lng, lat:lat}});
+    });
+
+  }
+
+})
+
+/*
+function displayFeatureInfo(feature, lngLat) {
+  if (feedbackPopup && feedbackPopup.isOpen()) feedbackPopup.remove();
+  const name = (typeof(feature.properties.name)==='undefined'?'Unknown park':feature.properties.name);
+  const osm_link = `https://www.openstreetmap.org/?mlat=${lngLat.lat}&mlon=${lngLat.lng}#map=17/${lngLat.lat}/${lngLat.lng}`
+  let popup = `<h4><a href = ${osm_link}>${name}</a></h4><hr><ul>`
+  Object.keys(feature.properties).forEach(key => popup+=`<li>${key}: <b>${feature.properties[key]}</b></li>\n`);
+
+  showMapillaryImage(lngLat)
+  popup+='<li><div id="showMapillary"></div></li>'
+  popup+='<li><div id="showGoogle"><a href="https://www.google.com/maps/@?api=1&map_action=pano&viewpoint='+lngLat.lat+','+lngLat.lng
+  popup+='"><img class="enlarge-onhover" src="https://maps.googleapis.com/maps/api/streetview?size=640x400&fov=120&pitch=-30&key=AIzaSyDXbZYWFjz5Nr8N1c0OoTA_YFYCyV0V6Fs&location='+lngLat.lat+','+lngLat.lng+'"></a></div></li>'
+  popup+='</ul><hr><div id="clickme" class="quiet text-left small">Suggest an edit</div>';
+  popup+='<div id="fform" class=""><form id="feedback"><p><textarea id="comment" name="comment" class="small" style="padding:3px"></textarea></p>';
+  popup+='<input type="hidden" name="link" value="' + window.location.href + '">';
+  popup+='<input type="hidden" name="osm_link" value="'+osm_link+'">';
+  popup+='<p id="result"></p><input type="submit" value="Submit" /></form></div>';
+
+  feedbackPopup = new mapboxgl.Popup()
+  .setLngLat(lngLat)
+  .setHTML(popup)
+  .addTo(map)
+
+  var request;
+	$("#feedback").submit(function(event){
+		if (request) {
+			request.abort();
+		}
+		var $form = $(this);
+		var $inputs = $form.find("input, select, button, textarea");
+		var serializedData = $form.serialize();
+    $inputs.prop("disabled", true);
+		$('#result').text('Sending ...');
+		request = $.ajax({
+			url: "https://script.google.com/macros/s/AKfycbwekShTJlFROtHCI4BEUQu9ACT00fP_Ftb8vOaUgEUYkxmiJVE/exec",
+			type: "post",
+			data: serializedData
+		});
+		request.done(function (response, textStatus, jqXHR){
+			$('#result').html('Thanks! We\'ll look into it</a>');
+		}).fail(function (jqXHR, textStatus, errorThrown){
+			$('#result').html('An error occured. Try again later.');
+      $inputs.prop("disabled", false);
+		}).always(function () {
+
+		});
+		event.preventDefault();
+	});
+}
+
+
+
+function showMapillaryImage(lngLat) {
+  const xhr = new XMLHttpRequest()
+  xhr.open('GET','https://a.mapillary.com/v3/images/?radius=15&per_page=1&client_id=TG1sUUxGQlBiYWx2V05NM0pQNUVMQTo2NTU3NTBiNTk1NzM1Y2U2&closeto='+lngLat.lng+','+lngLat.lat)
+  xhr.onload = function () {
+    if (xhr.status === 200) {
+      const result = JSON.parse(xhr.responseText)
+      if(!result.features || result.features.length==0){
+        return
+      }
+      document.getElementById('showMapillary').innerHTML = '<a href="https://www.mapillary.com/app/?focus=photo&pKey='+result.features[0].properties.key+'"><img class="enlarge-onhover" src="https://d1cuyjsrcm0gby.cloudfront.net/'+result.features[0].properties.key+'/thumb-640.jpg"></a>'
+    }
+  }
+  xhr.send()
+}
+
+*/
+</script>
+<!--https://docs.google.com/spreadsheet/ccc?key=1Qhw9wpej6xaeo6ELbW8GxBwOhvgLPLvyIIByj-re6J4/edit?usp=sharing -->
+</body>
+</html>

@@ -1,0 +1,6 @@
+[out:xml][timeout:20];
+(
+  wr(area:3604136816)[amenity=parking]["building"!~"."]["parking"!~"underground"]["parking"!~"multi-storey"];
+  node(w);
+);
+out;
