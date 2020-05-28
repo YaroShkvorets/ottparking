@@ -1,6 +1,8 @@
-[out:xml][timeout:20];
+[out:xml][timeout:90];
+{{geocodeArea:City of Ottawa}}->.searchArea;
 (
-  wr(area:3604136816)[amenity=parking]["building"!~"."]["parking"!~"underground"]["parking"!~"multi-storey"];
-  node(w);
+  relation["amenity"="parking"](area.searchArea);
+  way[amenity=parking][!"building"]["parking"!~"underground"]["parking"!~"multi-storey"](area.searchArea);
 );
-out;
+(._;>;);
+out meta;
